@@ -2,56 +2,304 @@
 
 namespace DigitalMarketingFramework\Distributor\Mail\DataDispatcher;
 
+use DigitalMarketingFramework\Core\Exception\DigitalMarketingFrameworkException;
 use DigitalMarketingFramework\Core\Model\Data\Value\FileValue;
+use DigitalMarketingFramework\Core\Model\Data\Value\FileValueInterface;
+use DigitalMarketingFramework\Core\Model\Data\Value\MultiValue;
+use DigitalMarketingFramework\Core\Model\Data\Value\ValueInterface;
+use DigitalMarketingFramework\Core\TemplateEngine\TemplateEngineAwareInterface;
+use DigitalMarketingFramework\Core\TemplateEngine\TemplateEngineAwareTrait;
 use DigitalMarketingFramework\Core\Utility\GeneralUtility;
+use DigitalMarketingFramework\Distributor\Core\DataDispatcher\DataDispatcher;
+use DigitalMarketingFramework\Distributor\Mail\Manager\DefaultMailManager;
+use DigitalMarketingFramework\Distributor\Mail\Manager\MailManagerInterface;
+use DigitalMarketingFramework\Distributor\Mail\Model\Data\Value\EmailValue;
+use DigitalMarketingFramework\Distributor\Mail\Utility\MailUtility;
+use DigitalMarketingFramework\Typo3\Distributor\Core\Registry\Registry;
+use Symfony\Component\Mime\Email;
+use Symfony\Component\Mime\Exception\RfcComplianceException;
 
-class MailDataDispatcher extends AbstractMailDataDispatcher
+class MailDataDispatcher extends DataDispatcher implements TemplateEngineAwareInterface
 {
-    protected string $valueDelimiter = '\s=\s';
-    protected string $lineDelimiter = '\n';
+    use TemplateEngineAwareTrait;
 
-    public function getValueDelimiter(): string
-    {
-        return $this->valueDelimiter;
-    }
+    protected bool $attachUploadedFiles = false;
+    protected string $from = '';
+    protected string $to = '';
+    protected string $replyTo = '';
+    protected string $subject = '';
 
-    public function setValueDelimiter(string $valueDelimiter): void
-    {
-        $this->valueDelimiter = $valueDelimiter;
-    }
+    protected array $plainTemplateConfig;
+    protected array $htmlTemplateConfig;
+    protected bool $useHtml;
 
-    public function getLineDelimiter(): string
-    {
-        return $this->lineDelimiter;
-    }
-
-    public function setLineDelimiter(string $lineDelimiter): void
-    {
-        $this->lineDelimiter = $lineDelimiter;
+    public function __construct(
+        string $keyword,
+        Registry $registry,
+        protected MailManagerInterface $mailManager = new DefaultMailManager()
+    ) {
+        parent::__construct($keyword, $registry);
     }
 
     /**
-     * @param array<mixed> $data
+     * Checks string for suspicious characters
+     *
+     * @param string $string String to check
+     * @return string Valid or empty string
+     */
+    protected function sanitizeHeaderString(string $string): string
+    {
+        $pattern = '/[\\r\\n\\f\\e]/';
+        if (preg_match($pattern, $string) > 0) {
+            $this->logger->warning('Dirty mail header found: "' . $string . '"');
+            $string = '';
+        }
+        return $string;
+    }
+
+    /**
+     * @param Email $message
+     * @param array<string|ValueInterface> $data
+     */
+    protected function processData(Email &$message, array $data): void
+    {
+        try {
+            $from = $this->getAddressData($this->from, true);
+            foreach ($from as $key => $value) {
+                $message->addFrom($value);
+            }
+
+            $to = $this->getAddressData($this->to);
+            foreach ($to as $value) {
+                $message->addTo($value);
+            }
+
+            if ($this->replyTo) {
+                $replyTo = $this->getAddressData($this->replyTo, true);
+                foreach ($replyTo as $value) {
+                    $message->addReplyTo($value);
+                }
+            }
+
+            $contentData = $this->attachUploadedFiles ? $this->getAllButUploadFields($data) : $data;
+            $plainBody = $this->getPlainBody($contentData);
+            $htmlBody = $this->getHtmlBody($contentData);
+
+            if ($htmlBody) {
+                $message->html($htmlBody);
+                if ($plainBody) {
+                    $message->text($plainBody);
+                }
+            } elseif ($plainBody) {
+                $message->text($plainBody);
+            }
+            $subject = $this->subject;
+            $message->subject($this->sanitizeHeaderString($subject));
+        } catch (RfcComplianceException $e) {
+            throw new DigitalMarketingFrameworkException($e->getMessage());
+        }
+    }
+
+    /**
+     * @param Email $message
+     * @param array<string,string|ValueInterface> $data
+     */
+    protected function processAttachments(Email &$message, array $data): void
+    {
+        $uploadFields = $this->getUploadFields($data);
+        if (!empty($uploadFields)) {
+            /** @var FileValue $uploadField */
+            foreach ($uploadFields as $uploadField) {
+                $message->attachFromPath(
+                    $uploadField->getPublicUrl(),
+                    $uploadField->getFileName(),
+                    $uploadField->getMimeType()
+                );
+            }
+        }
+    }
+
+    /**
+     *
+     * @param array<string,string|ValueInterface> $data
+     */
+    public function send(array $data): void
+    {
+        try {
+            $message = $this->mailManager->createMessage();
+            $this->processData($message, $data);
+            if ($this->attachUploadedFiles) {
+                $this->processAttachments($message, $data);
+            }
+            $this->mailManager->sendMessage($message);
+        } catch (\Exception $e) {
+            throw new DigitalMarketingFrameworkException($e->getMessage());
+        }
+    }
+
+    /**
+     * getAddressData
+     *
+     * Input examples:
+     * 'address@domain.tld'
+     * 'Some Name <address@domain.tld>'
+     * 'address@domain.tld, address-2@domain.tld'
+     * 'Some Name <address@domain.tld>, address-2@domain.tld, Some Other Name <address-3@domain.tld>'
+     * ['address@domain.tld', 'Some Name <address@domain.tld>']
+     * MultiValueField(['address@domain.tld', 'Some Name <address@domain.tld>'])
+     * EmailValue()
+     * [EmailValue(), 'address@domain.tld']
+     * MultiValue([EmailValue(), 'address@domain.tld'])
+     *
+     * @param string|array<string>|MultiValue|EmailValue $addresses
+     * @param bool $onlyOneAddress
+     * @return array<string>
+     */
+    protected function getAddressData($addresses, $onlyOneAddress = false)
+    {
+        if ($addresses instanceof EmailValue) {
+            $addresses = [$addresses];
+        } elseif ($onlyOneAddress) {
+            $addresses = [$addresses];
+        } else {
+            $addresses = GeneralUtility::castValueToArray($addresses);
+        }
+        $addresses = array_filter($addresses);
+
+        $result = [];
+        foreach ($addresses as $address) {
+            $name = '';
+            $email = '';
+            if ($address instanceof EmailValue) {
+                $name = $address->getName();
+                $email = $address->getAddress();
+            } elseif (preg_match('/^([^<]+)<([^>]+)>$/', $address, $matches)) {
+                // Some Name <some-address@domain.tld>
+                $name = $matches[1];
+                $email = $matches[2];
+            } else {
+                $email = $address;
+            }
+
+            if ($name) {
+                $result[trim($email)] = MailUtility::encode($name);
+            } else {
+                $result[] = trim($email);
+            }
+        }
+        return $result;
+    }
+
+    public function getAttachUploadedFiles(): bool
+    {
+        return $this->attachUploadedFiles;
+    }
+
+    public function setAttachUploadedFiles(bool $attachUploadedFiles): void
+    {
+        $this->attachUploadedFiles = $attachUploadedFiles;
+    }
+
+    public function getFrom(): string
+    {
+        return $this->from;
+    }
+
+    public function setFrom(string $from): void
+    {
+        $this->from = $from;
+    }
+
+    public function getTo(): string
+    {
+        return $this->to;
+    }
+
+    public function setTo(string $to): void
+    {
+        $this->to = $to;
+    }
+
+    public function getReplyTo(): string
+    {
+        return $this->replyTo;
+    }
+
+    public function setReplyTo(string $replyTo): void
+    {
+        $this->replyTo = $replyTo;
+    }
+
+    public function getSubject(): string
+    {
+        return $this->subject;
+    }
+
+    public function setSubject(string $subject): void
+    {
+        $this->subject = $subject;
+    }
+
+    public function getPlainTemplateConfig(): array
+    {
+        return $this->plainTemplateConfig;
+    }
+
+    public function setPlainTemplateConfig(array $plainTemplateConfig): void
+    {
+        $this->plainTemplateConfig = $plainTemplateConfig;
+    }
+
+    public function getHtmlTemplateConfig(): array
+    {
+        return $this->htmlTemplateConfig;
+    }
+
+    public function setHtmlTemplateConfig(array $htmlTemplateConfig): void
+    {
+        $this->htmlTemplateConfig = $htmlTemplateConfig;
+    }
+
+    public function getUseHtml(): bool
+    {
+        return $this->useHtml;
+    }
+
+    public function setUseHtml(bool $useHtml): void
+    {
+        $this->useHtml = $useHtml;
+    }
+
+    /**
+     * @param array<string,string|ValueInterface> $data
+     * @return array<FileValueInterface>
+     */
+    public function getUploadFields(array $data): array
+    {
+        return array_filter($data, function ($value) { return $value instanceof FileValueInterface; });
+    }
+
+    public function getAllButUploadFields(array $data): array
+    {
+        return array_filter($data, function ($value) { return !$value instanceof FileValueInterface; });
+    }
+
+    /**
+     * @param array<string,string|ValueInterface> $data
      */
     protected function getPlainBody(array $data): string
     {
-        if ($this->getAttachUploadedFiles()) {
-            $data = array_filter($data, function ($a) { return !$a instanceof FileValue; });
-        }
-        $valueDelimiter = GeneralUtility::parseSeparatorString($this->valueDelimiter);
-        $lineDelimiter = GeneralUtility::parseSeparatorString($this->lineDelimiter);
-        $content = '';
-        foreach ($data as $field => $value) {
-            $content .= $field . $valueDelimiter . $value . $lineDelimiter;
-        }
-        return $content;
+        return $this->templateEngine->render($this->plainTemplateConfig, $data);
     }
 
     /**
-     * @param array<mixed> $data
+     * @param array<string,string|ValueInterface> $data
      */
     protected function getHtmlBody(array $data): string
     {
-        return '';
+        if (!$this->useHtml) {
+            return '';
+        }
+        return $this->templateEngine->render($this->htmlTemplateConfig, $data);
     }
 }

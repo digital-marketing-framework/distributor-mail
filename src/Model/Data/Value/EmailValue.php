@@ -4,18 +4,25 @@ namespace DigitalMarketingFramework\Distributor\Mail\Model\Data\Value;
 
 use DigitalMarketingFramework\Core\Model\Data\Value\ValueInterface;
 
-abstract class EmailValue implements ValueInterface
+class EmailValue implements ValueInterface
 {
-    public function __construct(protected string $address, protected string $name = '')
-    {
+    public function __construct(
+        protected string $address,
+        protected string $name = ''
+    ) {
     }
 
     public function __toString(): string
     {
-        if ($this->name) {
-            return $this->name . ' <' . $this->address . '>';
+        if ($this->name !== '') {
+            return sprintf('%s <%s>', $this->name, $this->address);
         }
         return $this->address;
+    }
+
+    public function getValue(): string
+    {
+        return (string)$this;
     }
 
     public function getAddress(): string
