@@ -5,7 +5,6 @@ namespace DigitalMarketingFramework\Distributor\Mail\DataDispatcher;
 use DigitalMarketingFramework\Core\Exception\DigitalMarketingFrameworkException;
 use DigitalMarketingFramework\Core\Model\Data\Value\FileValue;
 use DigitalMarketingFramework\Core\Model\Data\Value\FileValueInterface;
-use DigitalMarketingFramework\Core\Model\Data\Value\MultiValue;
 use DigitalMarketingFramework\Core\Model\Data\Value\ValueInterface;
 use DigitalMarketingFramework\Core\TemplateEngine\TemplateEngineAwareInterface;
 use DigitalMarketingFramework\Core\TemplateEngine\TemplateEngineAwareTrait;
@@ -14,8 +13,8 @@ use DigitalMarketingFramework\Distributor\Core\DataDispatcher\DataDispatcher;
 use DigitalMarketingFramework\Distributor\Mail\Manager\DefaultMailManager;
 use DigitalMarketingFramework\Distributor\Mail\Manager\MailManagerInterface;
 use DigitalMarketingFramework\Distributor\Mail\Model\Data\Value\EmailValue;
-use DigitalMarketingFramework\Distributor\Mail\Utility\MailUtility;
 use DigitalMarketingFramework\Typo3\Distributor\Core\Registry\Registry;
+use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\Mime\Exception\RfcComplianceException;
 
@@ -24,10 +23,11 @@ class MailDataDispatcher extends DataDispatcher implements TemplateEngineAwareIn
     use TemplateEngineAwareTrait;
 
     protected bool $attachUploadedFiles = false;
-    protected string $from = '';
-    protected string $to = '';
-    protected string $replyTo = '';
-    protected string $subject = '';
+
+    protected string|ValueInterface $from = '';
+    protected string|ValueInterface $to = '';
+    protected string|ValueInterface|null $replyTo = '';
+    protected string|ValueInterface $subject = '';
 
     protected array $plainTemplateConfig;
     protected array $htmlTemplateConfig;
@@ -145,17 +145,16 @@ class MailDataDispatcher extends DataDispatcher implements TemplateEngineAwareIn
      * 'Some Name <address@domain.tld>'
      * 'address@domain.tld, address-2@domain.tld'
      * 'Some Name <address@domain.tld>, address-2@domain.tld, Some Other Name <address-3@domain.tld>'
-     * ['address@domain.tld', 'Some Name <address@domain.tld>']
-     * MultiValueField(['address@domain.tld', 'Some Name <address@domain.tld>'])
+     * MultiValue(['address@domain.tld', 'Some Name <address@domain.tld>'])
      * EmailValue()
      * [EmailValue(), 'address@domain.tld']
      * MultiValue([EmailValue(), 'address@domain.tld'])
      *
-     * @param string|array<string>|MultiValue|EmailValue $addresses
+     * @param string|ValueInterface $addresses
      * @param bool $onlyOneAddress
-     * @return array<string>
+     * @return array<Address>
      */
-    protected function getAddressData($addresses, $onlyOneAddress = false)
+    protected function getAddressData($addresses, $onlyOneAddress = false): array
     {
         if ($addresses instanceof EmailValue) {
             $addresses = [$addresses];
@@ -181,11 +180,7 @@ class MailDataDispatcher extends DataDispatcher implements TemplateEngineAwareIn
                 $email = $address;
             }
 
-            if ($name) {
-                $result[trim($email)] = MailUtility::encode($name);
-            } else {
-                $result[] = trim($email);
-            }
+            $result[] = new Address($email, $name);
         }
         return $result;
     }
@@ -200,42 +195,42 @@ class MailDataDispatcher extends DataDispatcher implements TemplateEngineAwareIn
         $this->attachUploadedFiles = $attachUploadedFiles;
     }
 
-    public function getFrom(): string
+    public function getFrom(): string|ValueInterface
     {
         return $this->from;
     }
 
-    public function setFrom(string $from): void
+    public function setFrom(string|ValueInterface $from): void
     {
         $this->from = $from;
     }
 
-    public function getTo(): string
+    public function getTo(): string|ValueInterface
     {
         return $this->to;
     }
 
-    public function setTo(string $to): void
+    public function setTo(string|ValueInterface $to): void
     {
         $this->to = $to;
     }
 
-    public function getReplyTo(): string
+    public function getReplyTo(): string|ValueInterface|null
     {
         return $this->replyTo;
     }
 
-    public function setReplyTo(string $replyTo): void
+    public function setReplyTo(string|ValueInterface|null $replyTo): void
     {
         $this->replyTo = $replyTo;
     }
 
-    public function getSubject(): string
+    public function getSubject(): string|ValueInterface
     {
         return $this->subject;
     }
 
-    public function setSubject(string $subject): void
+    public function setSubject(string|ValueInterface $subject): void
     {
         $this->subject = $subject;
     }
