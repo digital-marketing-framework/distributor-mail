@@ -274,6 +274,10 @@ class MailDataDispatcher extends DataDispatcher implements TemplateEngineAwareIn
         return array_filter($data, function ($value) { return $value instanceof FileValueInterface; });
     }
 
+    /**
+     * @param array<string,string|ValueInterface> $data
+     * @return array<string,string|ValueInterface>
+     */
     public function getAllButUploadFields(array $data): array
     {
         return array_filter($data, function ($value) { return !$value instanceof FileValueInterface; });

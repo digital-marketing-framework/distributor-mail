@@ -2,15 +2,16 @@
 
 namespace DigitalMarketingFramework\Distributor\Mail\Route;
 
+use DigitalMarketingFramework\Distributor\Core\Route\Route;
+use DigitalMarketingFramework\Core\TemplateEngine\TemplateEngineInterface;
+use DigitalMarketingFramework\Core\Exception\DigitalMarketingFrameworkException;
+use DigitalMarketingFramework\Core\DataProcessor\ValueSource\ConstantValueSource;
+use DigitalMarketingFramework\Distributor\Mail\DataDispatcher\MailDataDispatcher;
+use DigitalMarketingFramework\Core\ConfigurationDocument\SchemaDocument\Schema\CustomSchema;
 use DigitalMarketingFramework\Core\ConfigurationDocument\SchemaDocument\Schema\BooleanSchema;
 use DigitalMarketingFramework\Core\ConfigurationDocument\SchemaDocument\Schema\ContainerSchema;
-use DigitalMarketingFramework\Core\ConfigurationDocument\SchemaDocument\Schema\Custom\ValueSchema;
-use DigitalMarketingFramework\Core\ConfigurationDocument\SchemaDocument\Schema\CustomSchema;
 use DigitalMarketingFramework\Core\ConfigurationDocument\SchemaDocument\Schema\SchemaInterface;
-use DigitalMarketingFramework\Core\DataProcessor\ValueSource\ConstantValueSource;
-use DigitalMarketingFramework\Core\TemplateEngine\TemplateEngineInterface;
-use DigitalMarketingFramework\Distributor\Core\Route\Route;
-use DigitalMarketingFramework\Distributor\Mail\DataDispatcher\MailDataDispatcher;
+use DigitalMarketingFramework\Core\ConfigurationDocument\SchemaDocument\Schema\Custom\ValueSchema;
 
 class MailRoute extends Route
 {
@@ -45,12 +46,22 @@ class MailRoute extends Route
             $this->getConfig(static::KEY_FROM),
             $this->getDataProcessorContext()
         );
+
+        if($from === null || $from === '') {
+            throw new DigitalMarketingFrameworkException('MailDataDispatcher: $from must not be empty');
+        };
+
         $dispatcher->setFrom($from);
 
         $to = $this->dataProcessor->processValue(
             $this->getConfig(static::KEY_TO),
             $this->getDataProcessorContext()
         );
+
+        if($to === null || $to === '') {
+            throw new DigitalMarketingFrameworkException('MailDataDispatcher: $to must not be empty');
+        };
+
         $dispatcher->setTo($to);
 
         $replyTo = $this->dataProcessor->processValue(
@@ -63,6 +74,11 @@ class MailRoute extends Route
             $this->getConfig(static::KEY_SUBJECT),
             $this->getDataProcessorContext()
         );
+
+        if($subject === null || $subject === '') {
+            throw new DigitalMarketingFrameworkException('MailDataDispatcher: $subject must not be empty');
+        };
+
         $dispatcher->setSubject($subject);
 
         $attachUploadedFiles = $this->getConfig(static::KEY_ATTACH_UPLOADED_FILES);

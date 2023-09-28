@@ -7,7 +7,6 @@ use DigitalMarketingFramework\Core\ConfigurationDocument\SchemaDocument\Schema\C
 use DigitalMarketingFramework\Core\ConfigurationDocument\SchemaDocument\Schema\CustomSchema;
 use DigitalMarketingFramework\Core\ConfigurationDocument\SchemaDocument\Schema\SchemaInterface;
 use DigitalMarketingFramework\Core\DataProcessor\ValueSource\ValueSource;
-use DigitalMarketingFramework\Core\Exception\DigitalMarketingFrameworkException;
 use DigitalMarketingFramework\Core\Model\Data\Value\ValueInterface;
 use DigitalMarketingFramework\Distributor\Mail\Model\Data\Value\EmailValue;
 
@@ -29,7 +28,7 @@ class EmailValueSource extends ValueSource
         );
 
         if ($address === null || $address === '') {
-            throw new DigitalMarketingFrameworkException('email address must not be empty');
+            return null;
         }
 
         if ($address instanceof ValueInterface) {

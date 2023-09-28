@@ -22,22 +22,6 @@
     }
   ],
   "minimum-stability": "dev",
-  "repositories": [
-    {
-      "type": "vcs",
-      "url": "git@github.com:digital-marketing-framework/distributor-core.git",
-      "only": [
-        "digital-marketing-framework/distributor-core"
-      ]
-    },
-    {
-      "type": "vcs",
-      "url": "git@github.com:digital-marketing-framework/core.git",
-      "only": [
-        "digital-marketing-framework/core"
-      ]
-    }
-  ],
   "require": {
     "php": "^8.1",
     "digital-marketing-framework/distributor-core": "dev-main"
