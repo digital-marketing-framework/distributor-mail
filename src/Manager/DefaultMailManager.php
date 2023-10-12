@@ -10,25 +10,29 @@ use Symfony\Component\Mailer\Transport\Smtp\EsmtpTransport;
 use Symfony\Component\Mailer\Transport\Smtp\SmtpTransport;
 use Symfony\Component\Mailer\Transport\TransportInterface;
 use Symfony\Component\Mime\Email;
-
 use Symfony\Component\Mime\Exception\RfcComplianceException;
 
 class DefaultMailManager implements MailManagerInterface
 {
     public const TRANSPORT_TYPE = 'type';
+
     public const TRANSPORT_TYPE_SENDMAIL = 'sendmail';
+
     public const TRANSPORT_TYPE_SMTP = 'smtp';
 
     public const TRANSPORT_CONFIG = 'config';
+
     public const TRANSPORT_CONFIG_SENDMAIL_CMD = 'cmd';
+
     public const TRANSPORT_CONFIG_SMTP_DOMAIN = 'domain';
+
     public const TRANSPORT_CONFIG_SMTP_PORT = 'port';
+
     public const TRANSPORT_CONFIG_SMTP_USERNAME = 'username';
+
     public const TRANSPORT_CONFIG_SMTP_PASSWORD = 'password';
 
-
     /**
-     *
      * @var array<string, array<string, string>|string>
      */
     protected $transportConfiguration = [
@@ -61,7 +65,7 @@ class DefaultMailManager implements MailManagerInterface
         switch ($this->transportConfiguration[static::TRANSPORT_TYPE]) {
             case static::TRANSPORT_TYPE_SENDMAIL:
                 $dsn = 'sendmail://default';
-                $dsn .=  ($config[static::TRANSPORT_CONFIG_SENDMAIL_CMD]) ? '?command=' . $config[static::TRANSPORT_CONFIG_SENDMAIL_CMD] : '';
+                $dsn .= ($config[static::TRANSPORT_CONFIG_SENDMAIL_CMD] !== '') ? '?command=' . $config[static::TRANSPORT_CONFIG_SENDMAIL_CMD] : '';
                 $transport = Transport::fromDsn($dsn);
                 break;
             case static::TRANSPORT_TYPE_SMTP:
@@ -69,6 +73,7 @@ class DefaultMailManager implements MailManagerInterface
                 if (isset($config[static::TRANSPORT_CONFIG_SMTP_USERNAME]) && isset($config[static::TRANSPORT_CONFIG_SMTP_PASSWORD])) {
                     $dsn .= urlencode($config[static::TRANSPORT_CONFIG_SMTP_USERNAME]) . ':' . urlencode($config[static::TRANSPORT_CONFIG_SMTP_PASSWORD]) . '@';
                 }
+
                 $dsn .= $config[static::TRANSPORT_CONFIG_SMTP_DOMAIN] . ':' . $config[static::TRANSPORT_CONFIG_SMTP_PORT];
                 $transport = Transport::fromDsn($dsn);
                 break;
@@ -80,6 +85,7 @@ class DefaultMailManager implements MailManagerInterface
     public function getMailer(): Mailer
     {
         $transport = $this->getTransport();
+
         return new Mailer($transport);
     }
 
@@ -87,6 +93,7 @@ class DefaultMailManager implements MailManagerInterface
     {
         /** @var Email $message */
         $message = new Email();
+
         return $message;
     }
 

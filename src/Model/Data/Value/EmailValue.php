@@ -6,7 +6,7 @@ use DigitalMarketingFramework\Core\Model\Data\Value\ValueInterface;
 
 class EmailValue implements ValueInterface
 {
-    public function __construct(
+    final public function __construct(
         protected string $address,
         protected string $name = ''
     ) {
@@ -17,6 +17,7 @@ class EmailValue implements ValueInterface
         if ($this->name !== '') {
             return sprintf('%s <%s>', $this->name, $this->address);
         }
+
         return $this->address;
     }
 
@@ -35,9 +36,6 @@ class EmailValue implements ValueInterface
         return $this->name;
     }
 
-    /**
-     * @return array<string> $data
-     */
     public function pack(): array
     {
         return [
@@ -46,10 +44,7 @@ class EmailValue implements ValueInterface
         ];
     }
 
-    /**
-     * @param array<string> $packed
-     */
-    public static function unpack(array $packed): ValueInterface
+    public static function unpack(array $packed): EmailValue
     {
         return new static($packed['address'], $packed['name']);
     }
