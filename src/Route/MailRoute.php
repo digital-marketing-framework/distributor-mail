@@ -2,32 +2,37 @@
 
 namespace DigitalMarketingFramework\Distributor\Mail\Route;
 
-use DigitalMarketingFramework\Distributor\Core\Route\Route;
-use DigitalMarketingFramework\Core\TemplateEngine\TemplateEngineInterface;
-use DigitalMarketingFramework\Core\Exception\DigitalMarketingFrameworkException;
-use DigitalMarketingFramework\Core\DataProcessor\ValueSource\ConstantValueSource;
-use DigitalMarketingFramework\Distributor\Mail\DataDispatcher\MailDataDispatcher;
-use DigitalMarketingFramework\Core\ConfigurationDocument\SchemaDocument\Schema\CustomSchema;
 use DigitalMarketingFramework\Core\ConfigurationDocument\SchemaDocument\Schema\BooleanSchema;
 use DigitalMarketingFramework\Core\ConfigurationDocument\SchemaDocument\Schema\ContainerSchema;
-use DigitalMarketingFramework\Core\ConfigurationDocument\SchemaDocument\Schema\SchemaInterface;
 use DigitalMarketingFramework\Core\ConfigurationDocument\SchemaDocument\Schema\Custom\ValueSchema;
+use DigitalMarketingFramework\Core\ConfigurationDocument\SchemaDocument\Schema\CustomSchema;
+use DigitalMarketingFramework\Core\ConfigurationDocument\SchemaDocument\Schema\SchemaInterface;
+use DigitalMarketingFramework\Core\DataProcessor\ValueSource\ConstantValueSource;
+use DigitalMarketingFramework\Core\Exception\DigitalMarketingFrameworkException;
+use DigitalMarketingFramework\Core\TemplateEngine\TemplateEngineInterface;
+use DigitalMarketingFramework\Distributor\Core\Route\Route;
+use DigitalMarketingFramework\Distributor\Mail\DataDispatcher\MailDataDispatcher;
 
 class MailRoute extends Route
 {
     public const KEY_FROM = 'sender';
+
     public const KEY_TO = 'recipients';
+
     public const KEY_REPLY_TO = 'replyTo';
 
     public const KEY_SUBJECT = 'subject';
+
     public const DEFAULT_SUBJECT = 'New Form Submission';
 
     public const KEY_ATTACH_UPLOADED_FILES = 'includeAttachmentsInMail';
+
     public const DEFAULT_ATTACH_UPLOADED_FILES = false;
 
     public const KEY_PLAIN_TEMPLATE = 'plainTextTemplate';
 
     public const KEY_USE_HTML = 'useHtml';
+
     public const DEFAULT_USE_HTML = false;
 
     public const KEY_HTML_TEMPLATE = 'htmlTemplate';
@@ -47,9 +52,9 @@ class MailRoute extends Route
             $this->getDataProcessorContext()
         );
 
-        if($from === null || $from === '') {
+        if ($from === null || $from === '') {
             throw new DigitalMarketingFrameworkException('MailDataDispatcher: $from must not be empty');
-        };
+        }
 
         $dispatcher->setFrom($from);
 
@@ -58,9 +63,9 @@ class MailRoute extends Route
             $this->getDataProcessorContext()
         );
 
-        if($to === null || $to === '') {
+        if ($to === null || $to === '') {
             throw new DigitalMarketingFrameworkException('MailDataDispatcher: $to must not be empty');
-        };
+        }
 
         $dispatcher->setTo($to);
 
@@ -75,9 +80,9 @@ class MailRoute extends Route
             $this->getDataProcessorContext()
         );
 
-        if($subject === null || $subject === '') {
+        if ($subject === null || $subject === '') {
             throw new DigitalMarketingFrameworkException('MailDataDispatcher: $subject must not be empty');
-        };
+        }
 
         $dispatcher->setSubject($subject);
 

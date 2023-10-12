@@ -13,6 +13,7 @@ use DigitalMarketingFramework\Distributor\Mail\Model\Data\Value\EmailValue;
 class EmailValueSource extends ValueSource
 {
     public const KEY_ADDRESS = 'address';
+
     public const KEY_NAME = 'name';
 
     public function build(): null|EmailValue
@@ -58,6 +59,7 @@ class EmailValueSource extends ValueSource
         $schema = parent::getSchema();
         $schema->addProperty(static::KEY_ADDRESS, new CustomSchema(ValueSchema::TYPE));
         $schema->addProperty(static::KEY_NAME, new CustomSchema(ValueSchema::TYPE));
+
         return $schema;
     }
 }

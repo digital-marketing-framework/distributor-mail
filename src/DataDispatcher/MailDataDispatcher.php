@@ -3,17 +3,17 @@
 namespace DigitalMarketingFramework\Distributor\Mail\DataDispatcher;
 
 use DigitalMarketingFramework\Core\Exception\DigitalMarketingFrameworkException;
-use DigitalMarketingFramework\Core\Model\Data\Value\FileValue;
 use DigitalMarketingFramework\Core\Model\Data\Value\FileValueInterface;
 use DigitalMarketingFramework\Core\Model\Data\Value\ValueInterface;
 use DigitalMarketingFramework\Core\TemplateEngine\TemplateEngineAwareInterface;
 use DigitalMarketingFramework\Core\TemplateEngine\TemplateEngineAwareTrait;
 use DigitalMarketingFramework\Core\Utility\GeneralUtility;
 use DigitalMarketingFramework\Distributor\Core\DataDispatcher\DataDispatcher;
+use DigitalMarketingFramework\Distributor\Core\Registry\RegistryInterface;
 use DigitalMarketingFramework\Distributor\Mail\Manager\DefaultMailManager;
 use DigitalMarketingFramework\Distributor\Mail\Manager\MailManagerInterface;
 use DigitalMarketingFramework\Distributor\Mail\Model\Data\Value\EmailValue;
-use DigitalMarketingFramework\Typo3\Distributor\Core\Registry\Registry;
+use Exception;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\Mime\Exception\RfcComplianceException;
@@ -25,17 +25,24 @@ class MailDataDispatcher extends DataDispatcher implements TemplateEngineAwareIn
     protected bool $attachUploadedFiles = false;
 
     protected string|ValueInterface $from = '';
+
     protected string|ValueInterface $to = '';
+
     protected string|ValueInterface|null $replyTo = '';
+
     protected string|ValueInterface $subject = '';
 
-    protected array $plainTemplateConfig;
-    protected array $htmlTemplateConfig;
+    /** @var array<string,mixed> */
+    protected array $plainTemplateConfig = [];
+
+    /** @var array<string,mixed> */
+    protected array $htmlTemplateConfig = [];
+
     protected bool $useHtml;
 
     public function __construct(
         string $keyword,
-        Registry $registry,
+        RegistryInterface $registry,
         protected MailManagerInterface $mailManager = new DefaultMailManager()
     ) {
         parent::__construct($keyword, $registry);
@@ -45,6 +52,7 @@ class MailDataDispatcher extends DataDispatcher implements TemplateEngineAwareIn
      * Checks string for suspicious characters
      *
      * @param string $string String to check
+     *
      * @return string Valid or empty string
      */
     protected function sanitizeHeaderString(string $string): string
@@ -54,18 +62,18 @@ class MailDataDispatcher extends DataDispatcher implements TemplateEngineAwareIn
             $this->logger->warning('Dirty mail header found: "' . $string . '"');
             $string = '';
         }
+
         return $string;
     }
 
     /**
-     * @param Email $message
      * @param array<string|ValueInterface> $data
      */
     protected function processData(Email &$message, array $data): void
     {
         try {
             $from = $this->getAddressData($this->from, true);
-            foreach ($from as $key => $value) {
+            foreach ($from as $value) {
                 $message->addFrom($value);
             }
 
@@ -85,14 +93,18 @@ class MailDataDispatcher extends DataDispatcher implements TemplateEngineAwareIn
             $plainBody = $this->getPlainBody($contentData);
             $htmlBody = $this->getHtmlBody($contentData);
 
-            if ($htmlBody) {
+            if ($plainBody === '' && $htmlBody === '') {
+                throw new DigitalMarketingFrameworkException('email body seems to be empty');
+            }
+
+            if ($htmlBody !== '') {
                 $message->html($htmlBody);
-                if ($plainBody) {
-                    $message->text($plainBody);
-                }
-            } elseif ($plainBody) {
+            }
+
+            if ($plainBody !== '') {
                 $message->text($plainBody);
             }
+
             $subject = $this->subject;
             $message->subject($this->sanitizeHeaderString($subject));
         } catch (RfcComplianceException $e) {
@@ -101,26 +113,21 @@ class MailDataDispatcher extends DataDispatcher implements TemplateEngineAwareIn
     }
 
     /**
-     * @param Email $message
      * @param array<string,string|ValueInterface> $data
      */
     protected function processAttachments(Email &$message, array $data): void
     {
         $uploadFields = $this->getUploadFields($data);
-        if (!empty($uploadFields)) {
-            /** @var FileValue $uploadField */
-            foreach ($uploadFields as $uploadField) {
-                $message->attachFromPath(
-                    $uploadField->getPublicUrl(),
-                    $uploadField->getFileName(),
-                    $uploadField->getMimeType()
-                );
-            }
+        foreach ($uploadFields as $uploadField) {
+            $message->attachFromPath(
+                $uploadField->getPublicUrl(),
+                $uploadField->getFileName(),
+                $uploadField->getMimeType()
+            );
         }
     }
 
     /**
-     *
      * @param array<string,string|ValueInterface> $data
      */
     public function send(array $data): void
@@ -131,8 +138,9 @@ class MailDataDispatcher extends DataDispatcher implements TemplateEngineAwareIn
             if ($this->attachUploadedFiles) {
                 $this->processAttachments($message, $data);
             }
+
             $this->mailManager->sendMessage($message);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             throw new DigitalMarketingFrameworkException($e->getMessage());
         }
     }
@@ -152,6 +160,7 @@ class MailDataDispatcher extends DataDispatcher implements TemplateEngineAwareIn
      *
      * @param string|ValueInterface $addresses
      * @param bool $onlyOneAddress
+     *
      * @return array<Address>
      */
     protected function getAddressData($addresses, $onlyOneAddress = false): array
@@ -163,6 +172,7 @@ class MailDataDispatcher extends DataDispatcher implements TemplateEngineAwareIn
         } else {
             $addresses = GeneralUtility::castValueToArray($addresses);
         }
+
         $addresses = array_filter($addresses);
 
         $result = [];
@@ -172,7 +182,7 @@ class MailDataDispatcher extends DataDispatcher implements TemplateEngineAwareIn
             if ($address instanceof EmailValue) {
                 $name = $address->getName();
                 $email = $address->getAddress();
-            } elseif (preg_match('/^([^<]+)<([^>]+)>$/', $address, $matches)) {
+            } elseif (preg_match('/^([^<]+)<([^>]+)>$/', (string)$address, $matches)) {
                 // Some Name <some-address@domain.tld>
                 $name = $matches[1];
                 $email = $matches[2];
@@ -182,6 +192,7 @@ class MailDataDispatcher extends DataDispatcher implements TemplateEngineAwareIn
 
             $result[] = new Address($email, $name);
         }
+
         return $result;
     }
 
@@ -235,21 +246,33 @@ class MailDataDispatcher extends DataDispatcher implements TemplateEngineAwareIn
         $this->subject = $subject;
     }
 
+    /**
+     * @return array<string,mixed>
+     */
     public function getPlainTemplateConfig(): array
     {
         return $this->plainTemplateConfig;
     }
 
+    /**
+     * @param array<string,mixed> $plainTemplateConfig
+     */
     public function setPlainTemplateConfig(array $plainTemplateConfig): void
     {
         $this->plainTemplateConfig = $plainTemplateConfig;
     }
 
+    /**
+     * @return array<string,mixed>
+     */
     public function getHtmlTemplateConfig(): array
     {
         return $this->htmlTemplateConfig;
     }
 
+    /**
+     * @param array<string,mixed> $htmlTemplateConfig
+     */
     public function setHtmlTemplateConfig(array $htmlTemplateConfig): void
     {
         $this->htmlTemplateConfig = $htmlTemplateConfig;
@@ -267,20 +290,26 @@ class MailDataDispatcher extends DataDispatcher implements TemplateEngineAwareIn
 
     /**
      * @param array<string,string|ValueInterface> $data
+     *
      * @return array<FileValueInterface>
      */
     public function getUploadFields(array $data): array
     {
-        return array_filter($data, function ($value) { return $value instanceof FileValueInterface; });
+        return array_filter($data, static function ($value) {
+            return $value instanceof FileValueInterface;
+        });
     }
 
     /**
      * @param array<string,string|ValueInterface> $data
+     *
      * @return array<string,string|ValueInterface>
      */
     public function getAllButUploadFields(array $data): array
     {
-        return array_filter($data, function ($value) { return !$value instanceof FileValueInterface; });
+        return array_filter($data, static function ($value) {
+            return !$value instanceof FileValueInterface;
+        });
     }
 
     /**
@@ -299,6 +328,7 @@ class MailDataDispatcher extends DataDispatcher implements TemplateEngineAwareIn
         if (!$this->useHtml) {
             return '';
         }
+
         return $this->templateEngine->render($this->htmlTemplateConfig, $data);
     }
 }
