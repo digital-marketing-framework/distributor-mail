@@ -10,7 +10,6 @@ use DigitalMarketingFramework\Core\TemplateEngine\TemplateEngineAwareTrait;
 use DigitalMarketingFramework\Core\Utility\GeneralUtility;
 use DigitalMarketingFramework\Distributor\Core\DataDispatcher\DataDispatcher;
 use DigitalMarketingFramework\Distributor\Core\Registry\RegistryInterface;
-use DigitalMarketingFramework\Distributor\Mail\Manager\DefaultMailManager;
 use DigitalMarketingFramework\Distributor\Mail\Manager\MailManagerInterface;
 use DigitalMarketingFramework\Distributor\Mail\Model\Data\Value\EmailValue;
 use Exception;
@@ -43,7 +42,7 @@ class MailDataDispatcher extends DataDispatcher implements TemplateEngineAwareIn
     public function __construct(
         string $keyword,
         RegistryInterface $registry,
-        protected MailManagerInterface $mailManager = new DefaultMailManager()
+        protected MailManagerInterface $mailManager
     ) {
         parent::__construct($keyword, $registry);
     }
