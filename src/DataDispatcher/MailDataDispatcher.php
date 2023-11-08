@@ -3,6 +3,8 @@
 namespace DigitalMarketingFramework\Distributor\Mail\DataDispatcher;
 
 use DigitalMarketingFramework\Core\Exception\DigitalMarketingFrameworkException;
+use DigitalMarketingFramework\Core\FileStorage\FileStorageAwareInterface;
+use DigitalMarketingFramework\Core\FileStorage\FileStorageAwareTrait;
 use DigitalMarketingFramework\Core\Model\Data\Value\FileValueInterface;
 use DigitalMarketingFramework\Core\Model\Data\Value\ValueInterface;
 use DigitalMarketingFramework\Core\TemplateEngine\TemplateEngineAwareInterface;
@@ -17,9 +19,10 @@ use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\Mime\Exception\RfcComplianceException;
 
-class MailDataDispatcher extends DataDispatcher implements TemplateEngineAwareInterface
+class MailDataDispatcher extends DataDispatcher implements TemplateEngineAwareInterface, FileStorageAwareInterface
 {
     use TemplateEngineAwareTrait;
+    use FileStorageAwareTrait;
 
     protected bool $attachUploadedFiles = false;
 
@@ -118,8 +121,9 @@ class MailDataDispatcher extends DataDispatcher implements TemplateEngineAwareIn
     {
         $uploadFields = $this->getUploadFields($data);
         foreach ($uploadFields as $uploadField) {
-            $message->attachFromPath(
-                $uploadField->getPublicUrl(),
+            $fileContents = $this->fileStorage->getFileContents($uploadField->getRelativePath());
+            $message->attach(
+                $fileContents,
                 $uploadField->getFileName(),
                 $uploadField->getMimeType()
             );
