@@ -2,18 +2,18 @@
 
 namespace DigitalMarketingFramework\Distributor\Mail\Route;
 
-use DigitalMarketingFramework\Core\ConfigurationDocument\SchemaDocument\Schema\BooleanSchema;
-use DigitalMarketingFramework\Core\ConfigurationDocument\SchemaDocument\Schema\ContainerSchema;
-use DigitalMarketingFramework\Core\ConfigurationDocument\SchemaDocument\Schema\Custom\ValueSchema;
-use DigitalMarketingFramework\Core\ConfigurationDocument\SchemaDocument\Schema\CustomSchema;
-use DigitalMarketingFramework\Core\ConfigurationDocument\SchemaDocument\Schema\SchemaInterface;
+use DigitalMarketingFramework\Core\SchemaDocument\Schema\BooleanSchema;
+use DigitalMarketingFramework\Core\SchemaDocument\Schema\ContainerSchema;
+use DigitalMarketingFramework\Core\SchemaDocument\Schema\Custom\ValueSchema;
+use DigitalMarketingFramework\Core\SchemaDocument\Schema\CustomSchema;
+use DigitalMarketingFramework\Core\SchemaDocument\Schema\SchemaInterface;
 use DigitalMarketingFramework\Core\DataProcessor\ValueSource\ConstantValueSource;
 use DigitalMarketingFramework\Core\Exception\DigitalMarketingFrameworkException;
 use DigitalMarketingFramework\Core\TemplateEngine\TemplateEngineInterface;
-use DigitalMarketingFramework\Distributor\Core\Route\Route;
+use DigitalMarketingFramework\Distributor\Core\Route\OutboundRoute;
 use DigitalMarketingFramework\Distributor\Mail\DataDispatcher\MailDataDispatcher;
 
-class MailRoute extends Route
+class MailOutboundRoute extends OutboundRoute
 {
     public const KEY_FROM = 'sender';
 
@@ -37,7 +37,17 @@ class MailRoute extends Route
 
     public const KEY_HTML_TEMPLATE = 'htmlTemplate';
 
-    protected static function getDefaultPassthroughFields(): bool
+    public static function getIntegrationName(): string
+    {
+        return 'mail';
+    }
+
+    public static function getOutboundRouteListLabel(): ?string
+    {
+        return 'Mail Routes';
+    }
+
+    public static function getDefaultPassthroughFields(): bool
     {
         return true;
     }
