@@ -2,6 +2,7 @@
 
 namespace DigitalMarketingFramework\Distributor\Mail\Route;
 
+use DigitalMarketingFramework\Core\Integration\IntegrationInfo;
 use DigitalMarketingFramework\Core\SchemaDocument\Schema\BooleanSchema;
 use DigitalMarketingFramework\Core\SchemaDocument\Schema\ContainerSchema;
 use DigitalMarketingFramework\Core\SchemaDocument\Schema\Custom\ValueSchema;
@@ -37,14 +38,9 @@ class MailOutboundRoute extends OutboundRoute
 
     public const KEY_HTML_TEMPLATE = 'htmlTemplate';
 
-    public static function getIntegrationName(): string
+    public static function getDefaultIntegrationInfo(): IntegrationInfo
     {
-        return 'mail';
-    }
-
-    public static function getOutboundRouteListLabel(): ?string
-    {
-        return 'Mail Routes';
+        return new IntegrationInfo('mail', outboundRouteListLabel: 'Mail Routes');
     }
 
     public static function getDefaultPassthroughFields(): bool
