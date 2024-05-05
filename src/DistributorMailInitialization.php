@@ -7,12 +7,12 @@ use DigitalMarketingFramework\Core\Initialization;
 use DigitalMarketingFramework\Core\Registry\RegistryDomain;
 use DigitalMarketingFramework\Core\Registry\RegistryInterface;
 use DigitalMarketingFramework\Distributor\Core\DataDispatcher\DataDispatcherInterface;
-use DigitalMarketingFramework\Distributor\Core\Route\RouteInterface;
+use DigitalMarketingFramework\Distributor\Core\Route\OutboundRouteInterface;
 use DigitalMarketingFramework\Distributor\Mail\DataDispatcher\MailDataDispatcher;
 use DigitalMarketingFramework\Distributor\Mail\DataProcessor\ValueSource\EmailValueSource;
 use DigitalMarketingFramework\Distributor\Mail\Manager\DefaultMailManager;
 use DigitalMarketingFramework\Distributor\Mail\Manager\MailManagerInterface;
-use DigitalMarketingFramework\Distributor\Mail\Route\MailRoute;
+use DigitalMarketingFramework\Distributor\Mail\Route\MailOutboundRoute;
 
 class DistributorMailInitialization extends Initialization
 {
@@ -26,8 +26,8 @@ class DistributorMailInitialization extends Initialization
             DataDispatcherInterface::class => [
                 MailDataDispatcher::class,
             ],
-            RouteInterface::class => [
-                MailRoute::class,
+            OutboundRouteInterface::class => [
+                MailOutboundRoute::class,
             ],
         ],
     ];

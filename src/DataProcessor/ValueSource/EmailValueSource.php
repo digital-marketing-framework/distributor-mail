@@ -2,12 +2,12 @@
 
 namespace DigitalMarketingFramework\Distributor\Mail\DataProcessor\ValueSource;
 
-use DigitalMarketingFramework\Core\ConfigurationDocument\SchemaDocument\Schema\ContainerSchema;
-use DigitalMarketingFramework\Core\ConfigurationDocument\SchemaDocument\Schema\Custom\ValueSchema;
-use DigitalMarketingFramework\Core\ConfigurationDocument\SchemaDocument\Schema\CustomSchema;
-use DigitalMarketingFramework\Core\ConfigurationDocument\SchemaDocument\Schema\SchemaInterface;
 use DigitalMarketingFramework\Core\DataProcessor\ValueSource\ValueSource;
 use DigitalMarketingFramework\Core\Model\Data\Value\ValueInterface;
+use DigitalMarketingFramework\Core\SchemaDocument\Schema\ContainerSchema;
+use DigitalMarketingFramework\Core\SchemaDocument\Schema\Custom\ValueSchema;
+use DigitalMarketingFramework\Core\SchemaDocument\Schema\CustomSchema;
+use DigitalMarketingFramework\Core\SchemaDocument\Schema\SchemaInterface;
 use DigitalMarketingFramework\Distributor\Mail\Model\Data\Value\EmailValue;
 
 class EmailValueSource extends ValueSource
@@ -16,7 +16,7 @@ class EmailValueSource extends ValueSource
 
     public const KEY_NAME = 'name';
 
-    public function build(): null|EmailValue
+    public function build(): ?EmailValue
     {
         $name = $this->dataProcessor->processValue(
             $this->getConfig(static::KEY_NAME),
