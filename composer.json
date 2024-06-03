@@ -23,14 +23,13 @@
   "homepage": "https://www.mediatis.de",
   "require": {
     "php": "^8.1",
-    "digital-marketing-framework/distributor-core": "^2.1 || dev-feature/MFR-83-rest",
-    "digital-marketing-framework/template-engine-twig": "^2.1 || dev-feature/MFR-83-rest",
+    "digital-marketing-framework/distributor-core": "^2.1",
+    "digital-marketing-framework/template-engine-twig": "^2.1",
     "symfony/mailer": "^5.4 || ^6.3"
   },
   "require-dev": {
     "mediatis/coding-standards": "^1.0"
   },
-  "minimum-stability": "dev",
   "autoload": {
     "psr-4": {
       "DigitalMarketingFramework\\Distributor\\Mail\\": "src/"
