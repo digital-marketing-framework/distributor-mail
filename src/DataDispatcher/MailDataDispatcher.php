@@ -158,15 +158,15 @@ class MailDataDispatcher extends DataDispatcher implements TemplateEngineAwareIn
 
             $previewData['subject'] = $message->getSubject();
 
-            $previewData['from'] = array_map(function(Address $address) {
+            $previewData['from'] = array_map(static function (Address $address) {
                 return $address->toString();
             }, $message->getFrom());
 
-            $previewData['to'] = array_map(function(Address $address) {
+            $previewData['to'] = array_map(static function (Address $address) {
                 return $address->toString();
             }, $message->getTo());
 
-            $previewData['replyTo'] = array_map(function(Address $address) {
+            $previewData['replyTo'] = array_map(static function (Address $address) {
                 return $address->toString();
             }, $message->getReplyTo());
 
