@@ -1,0 +1,52 @@
+<h3>Data Dispatcher Preview ({{ keyword }})</h3>
+
+<div>
+    <h4>Email config</h4>
+    <p>
+        <table>
+            <tbody>
+                <tr>
+                    <td>From</td>
+                    <td>{{ from|join(', ') }}</td>
+                </tr>
+                <tr>
+                    <td>To</td>
+                    <td>{{ to|join(', ') }}</td>
+                </tr>
+                <tr>
+                    <td>Reply to</td>
+                    <td>{{ replyTo|join(', ') }}</td>
+                </tr>
+                <tr>
+                    <td>Subject</td>
+                    <td>{{ subject }}</td>
+                </tr>
+                <tr>
+                    <td>Attach files</td>
+                    <td>{% if attachFiles %}yes{% else %}no{% endif %}</td>
+                </tr>
+            </tbody>
+        </table>
+    </p>
+</div>
+
+<div>
+    <h4>Plain text body</h4>
+    <p>
+        <pre>{{ plainText|raw }}</pre>
+    </p>
+</div>
+
+<div>
+    <h4>HTML body</h4>
+    <p>
+        {{ htmlText|raw }}
+    </p>
+</div>
+
+<div>
+    <h4>Data</h4>
+    <p>
+        {% include 'preview/data-table.html.twig' %}
+    </p>
+</div>
