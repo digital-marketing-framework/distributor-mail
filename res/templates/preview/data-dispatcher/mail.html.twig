@@ -2,7 +2,7 @@
 
 <div>
     <h4>Email config</h4>
-    <p>
+    <div>
         <table>
             <tbody>
                 <tr>
@@ -27,26 +27,26 @@
                 </tr>
             </tbody>
         </table>
-    </p>
+    </div>
 </div>
 
 <div>
     <h4>Plain text body</h4>
-    <p>
+    <div>
         <pre>{{ plainText|raw }}</pre>
-    </p>
+    </div>
 </div>
 
 <div>
     <h4>HTML body</h4>
-    <p>
+    <div>
         {{ htmlText|raw }}
-    </p>
+    </div>
 </div>
 
 <div>
     <h4>Data</h4>
-    <p>
+    <div>
         {% include 'preview/data-table.html.twig' %}
-    </p>
+    </div>
 </div>
