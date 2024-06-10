@@ -148,6 +148,40 @@ class MailDataDispatcher extends DataDispatcher implements TemplateEngineAwareIn
         }
     }
 
+    protected function getPreviewData(array $data): array
+    {
+        $previewData = parent::getPreviewData($data);
+
+        try {
+            $message = $this->mailManager->createMessage();
+            $this->processData($message, $data);
+
+            $previewData['subject'] = $message->getSubject();
+
+            $previewData['from'] = array_map(static function (Address $address) {
+                return $address->toString();
+            }, $message->getFrom());
+
+            $previewData['to'] = array_map(static function (Address $address) {
+                return $address->toString();
+            }, $message->getTo());
+
+            $previewData['replyTo'] = array_map(static function (Address $address) {
+                return $address->toString();
+            }, $message->getReplyTo());
+
+            $previewData['plainText'] = $message->getTextBody();
+
+            $previewData['htmlText'] = $message->getHtmlBody();
+
+            $previewData['attachFiles'] = $this->attachUploadedFiles;
+        } catch (Exception $e) {
+            throw new DigitalMarketingFrameworkException($e->getMessage());
+        }
+
+        return $previewData;
+    }
+
     /**
      * getAddressData
      *
