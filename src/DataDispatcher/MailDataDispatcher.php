@@ -156,25 +156,25 @@ class MailDataDispatcher extends DataDispatcher implements TemplateEngineAwareIn
             $message = $this->mailManager->createMessage();
             $this->processData($message, $data);
 
-            $previewData['subject'] = $message->getSubject();
+            $previewData['config']['Subject'] = $message->getSubject();
 
-            $previewData['from'] = array_map(static function (Address $address) {
+            $previewData['config']['From'] = implode(', ', array_map(static function (Address $address) {
                 return $address->toString();
-            }, $message->getFrom());
+            }, $message->getFrom()));
 
-            $previewData['to'] = array_map(static function (Address $address) {
+            $previewData['config']['To'] = implode(', ', array_map(static function (Address $address) {
                 return $address->toString();
-            }, $message->getTo());
+            }, $message->getTo()));
 
-            $previewData['replyTo'] = array_map(static function (Address $address) {
+            $previewData['config']['Reply to'] = implode(', ', array_map(static function (Address $address) {
                 return $address->toString();
-            }, $message->getReplyTo());
+            }, $message->getReplyTo()));
+
+            $previewData['config']['Attach files'] = $this->attachUploadedFiles ? 'yes' : 'no';
 
             $previewData['plainText'] = $message->getTextBody();
 
             $previewData['htmlText'] = $message->getHtmlBody();
-
-            $previewData['attachFiles'] = $this->attachUploadedFiles;
         } catch (Exception $e) {
             throw new DigitalMarketingFrameworkException($e->getMessage());
         }
