@@ -2,26 +2,19 @@
 
 namespace DigitalMarketingFramework\Distributor\Mail;
 
-use DigitalMarketingFramework\Core\DataProcessor\ValueSource\ValueSourceInterface;
 use DigitalMarketingFramework\Core\Initialization;
 use DigitalMarketingFramework\Core\Registry\RegistryDomain;
 use DigitalMarketingFramework\Core\Registry\RegistryInterface;
 use DigitalMarketingFramework\Distributor\Core\DataDispatcher\DataDispatcherInterface;
 use DigitalMarketingFramework\Distributor\Core\Route\OutboundRouteInterface;
 use DigitalMarketingFramework\Distributor\Mail\DataDispatcher\MailDataDispatcher;
-use DigitalMarketingFramework\Distributor\Mail\DataProcessor\ValueSource\EmailValueSource;
-use DigitalMarketingFramework\Distributor\Mail\Manager\DefaultMailManager;
-use DigitalMarketingFramework\Distributor\Mail\Manager\MailManagerInterface;
 use DigitalMarketingFramework\Distributor\Mail\Route\MailOutboundRoute;
+use DigitalMarketingFramework\Mail\Manager\DefaultMailManager;
+use DigitalMarketingFramework\Mail\Manager\MailManagerInterface;
 
 class DistributorMailInitialization extends Initialization
 {
     protected const PLUGINS = [
-        RegistryDomain::CORE => [
-            ValueSourceInterface::class => [
-                EmailValueSource::class,
-            ],
-        ],
         RegistryDomain::DISTRIBUTOR => [
             DataDispatcherInterface::class => [
                 MailDataDispatcher::class,
@@ -36,7 +29,7 @@ class DistributorMailInitialization extends Initialization
 
     public function __construct(
         protected ?MailManagerInterface $mailManager = null,
-        string $packageAlias = ''
+        string $packageAlias = '',
     ) {
         parent::__construct('distributor-mail', '1.0.0', $packageAlias);
     }
