@@ -9,11 +9,9 @@ use DigitalMarketingFramework\Core\Model\Data\Value\FileValueInterface;
 use DigitalMarketingFramework\Core\Model\Data\Value\ValueInterface;
 use DigitalMarketingFramework\Core\TemplateEngine\TemplateEngineAwareInterface;
 use DigitalMarketingFramework\Core\TemplateEngine\TemplateEngineAwareTrait;
-use DigitalMarketingFramework\Core\Utility\GeneralUtility;
 use DigitalMarketingFramework\Distributor\Core\DataDispatcher\DataDispatcher;
 use DigitalMarketingFramework\Distributor\Core\Registry\RegistryInterface;
 use DigitalMarketingFramework\Mail\Manager\MailManagerInterface;
-use DigitalMarketingFramework\Mail\Model\Data\Value\EmailValue;
 use DigitalMarketingFramework\Mail\Utility\MailUtility;
 use Exception;
 use Symfony\Component\Mime\Address;
@@ -94,6 +92,7 @@ class MailDataDispatcher extends DataDispatcher implements TemplateEngineAwareIn
             if ($subject === '') {
                 $this->logger->warning('Dirty mail header found: "' . $this->subject . '"');
             }
+
             $message->subject($subject);
         } catch (RfcComplianceException $e) {
             throw new DigitalMarketingFrameworkException($e->getMessage());
