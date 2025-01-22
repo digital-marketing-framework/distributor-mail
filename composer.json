@@ -25,8 +25,7 @@
     "php": "^8.1",
     "digital-marketing-framework/distributor-core": "^2.3.1",
     "digital-marketing-framework/mail": "^1.0",
-    "digital-marketing-framework/template-engine-twig": "^2.1",
-    "symfony/mailer": "^5.4 || ^6.3"
+    "digital-marketing-framework/template-engine-twig": "^2.1"
   },
   "require-dev": {
     "mediatis/coding-standards": "^1.0"

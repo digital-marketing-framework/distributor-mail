@@ -14,6 +14,7 @@ use DigitalMarketingFramework\Distributor\Core\DataDispatcher\DataDispatcher;
 use DigitalMarketingFramework\Distributor\Core\Registry\RegistryInterface;
 use DigitalMarketingFramework\Mail\Manager\MailManagerInterface;
 use DigitalMarketingFramework\Mail\Model\Data\Value\EmailValue;
+use DigitalMarketingFramework\Mail\Utility\MailUtility;
 use Exception;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Email;
@@ -51,41 +52,23 @@ class MailDataDispatcher extends DataDispatcher implements TemplateEngineAwareIn
     }
 
     /**
-     * Checks string for suspicious characters
-     *
-     * @param string $string String to check
-     *
-     * @return string Valid or empty string
-     */
-    protected function sanitizeHeaderString(string $string): string
-    {
-        $pattern = '/[\\r\\n\\f\\e]/';
-        if (preg_match($pattern, $string) > 0) {
-            $this->logger->warning('Dirty mail header found: "' . $string . '"');
-            $string = '';
-        }
-
-        return $string;
-    }
-
-    /**
      * @param array<string|ValueInterface> $data
      */
     protected function processData(Email &$message, array $data): void
     {
         try {
-            $from = $this->getAddressData($this->from, true);
+            $from = MailUtility::getAddressData($this->from, true);
             foreach ($from as $value) {
                 $message->addFrom($value);
             }
 
-            $to = $this->getAddressData($this->to);
+            $to = MailUtility::getAddressData($this->to);
             foreach ($to as $value) {
                 $message->addTo($value);
             }
 
             if ($this->replyTo) {
-                $replyTo = $this->getAddressData($this->replyTo, true);
+                $replyTo = MailUtility::getAddressData($this->replyTo, true);
                 foreach ($replyTo as $value) {
                     $message->addReplyTo($value);
                 }
@@ -107,8 +90,11 @@ class MailDataDispatcher extends DataDispatcher implements TemplateEngineAwareIn
                 $message->text($plainBody);
             }
 
-            $subject = $this->subject;
-            $message->subject($this->sanitizeHeaderString($subject));
+            $subject = MailUtility::sanitizeHeaderString($this->subject);
+            if ($subject === '') {
+                $this->logger->warning('Dirty mail header found: "' . $this->subject . '"');
+            }
+            $message->subject($subject);
         } catch (RfcComplianceException $e) {
             throw new DigitalMarketingFrameworkException($e->getMessage());
         }
@@ -180,57 +166,6 @@ class MailDataDispatcher extends DataDispatcher implements TemplateEngineAwareIn
         }
 
         return $previewData;
-    }
-
-    /**
-     * getAddressData
-     *
-     * Input examples:
-     * 'address@domain.tld'
-     * 'Some Name <address@domain.tld>'
-     * 'address@domain.tld, address-2@domain.tld'
-     * 'Some Name <address@domain.tld>, address-2@domain.tld, Some Other Name <address-3@domain.tld>'
-     * MultiValue(['address@domain.tld', 'Some Name <address@domain.tld>'])
-     * EmailValue()
-     * [EmailValue(), 'address@domain.tld']
-     * MultiValue([EmailValue(), 'address@domain.tld'])
-     *
-     * @param string|ValueInterface $addresses
-     * @param bool $onlyOneAddress
-     *
-     * @return array<Address>
-     */
-    protected function getAddressData($addresses, $onlyOneAddress = false): array
-    {
-        if ($addresses instanceof EmailValue) {
-            $addresses = [$addresses];
-        } elseif ($onlyOneAddress) {
-            $addresses = [$addresses];
-        } else {
-            $addresses = GeneralUtility::castValueToArray($addresses);
-        }
-
-        $addresses = array_filter($addresses);
-
-        $result = [];
-        foreach ($addresses as $address) {
-            $name = '';
-            $email = '';
-            if ($address instanceof EmailValue) {
-                $name = $address->getName();
-                $email = $address->getAddress();
-            } elseif (preg_match('/^([^<]+)<([^>]+)>$/', (string)$address, $matches)) {
-                // Some Name <some-address@domain.tld>
-                $name = $matches[1];
-                $email = $matches[2];
-            } else {
-                $email = $address;
-            }
-
-            $result[] = new Address($email, $name);
-        }
-
-        return $result;
     }
 
     public function getAttachUploadedFiles(): bool
