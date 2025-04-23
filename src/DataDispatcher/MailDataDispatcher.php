@@ -133,7 +133,7 @@ class MailDataDispatcher extends DataDispatcher implements TemplateEngineAwareIn
         }
     }
 
-    protected function getPreviewData(array $data): array
+    public function getPreviewData(array $data): array
     {
         $previewData = parent::getPreviewData($data);
 
