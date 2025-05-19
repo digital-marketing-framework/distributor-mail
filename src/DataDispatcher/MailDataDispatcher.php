@@ -133,9 +133,9 @@ class MailDataDispatcher extends DataDispatcher implements TemplateEngineAwareIn
         }
     }
 
-    protected function getPreviewData(array $data): array
+    public function preview(array $data): array
     {
-        $previewData = parent::getPreviewData($data);
+        $previewData = parent::preview($data);
 
         try {
             $message = $this->mailManager->createMessage();

@@ -1,0 +1,13 @@
+{% extends 'distributor/preview/data-dispatcher.html.twig' %}
+
+{% block previewCustom %}
+    <div>
+        <h4>Plain text body</h4>
+        {% include 'note.html.twig' with { body: plainText, preformatted: true } %}
+    </div>
+
+    <div>
+        <h4>HTML body</h4>
+        {% include 'note.html.twig' with { body: htmlText } %}
+    </div>
+{% endblock %}

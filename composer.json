@@ -1,6 +1,6 @@
 {
     "name": "digital-marketing-framework/distributor-mail",
-    "description": "Digital Marketing Framework - Distributor - Mail",
+    "description": "Anyrel - Distributor - Mail",
     "license": "GPL-2.0-or-later",
     "type": "library",
     "keywords": [
@@ -23,13 +23,14 @@
     "homepage": "https://www.mediatis.de",
     "require": {
         "php": "^8.1",
-        "digital-marketing-framework/distributor-core": "^2.3.1",
-        "digital-marketing-framework/mail": "^1.0",
-        "digital-marketing-framework/template-engine-twig": "^2.1"
+        "digital-marketing-framework/distributor-core": "dev-feature/MFR-136-t3-13",
+        "digital-marketing-framework/mail": "dev-feature/MFR-136-t3-13",
+        "digital-marketing-framework/template-engine-twig": "dev-feature/MFR-136-t3-13"
     },
     "require-dev": {
         "mediatis/coding-standards": "^1.0"
     },
+    "minimum-stability": "dev",
     "autoload": {
         "psr-4": {
             "DigitalMarketingFramework\\Distributor\\Mail\\": "src/"
