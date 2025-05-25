@@ -1,4 +1,4 @@
-# MailDistributor for Mediatis Digital Marketing Framework
+# Mail Distributor for Anyrel
 
 ## Introduction
 

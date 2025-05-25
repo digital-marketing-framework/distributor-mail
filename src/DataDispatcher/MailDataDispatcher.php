@@ -65,7 +65,7 @@ class MailDataDispatcher extends DataDispatcher implements TemplateEngineAwareIn
                 $message->addTo($value);
             }
 
-            if ($this->replyTo) {
+            if ($this->replyTo !== null) {
                 $replyTo = MailUtility::getAddressData($this->replyTo, true);
                 foreach ($replyTo as $value) {
                     $message->addReplyTo($value);
@@ -133,9 +133,9 @@ class MailDataDispatcher extends DataDispatcher implements TemplateEngineAwareIn
         }
     }
 
-    protected function getPreviewData(array $data): array
+    public function preview(array $data): array
     {
-        $previewData = parent::getPreviewData($data);
+        $previewData = parent::preview($data);
 
         try {
             $message = $this->mailManager->createMessage();
@@ -143,17 +143,11 @@ class MailDataDispatcher extends DataDispatcher implements TemplateEngineAwareIn
 
             $previewData['config']['Subject'] = $message->getSubject();
 
-            $previewData['config']['From'] = implode(', ', array_map(static function (Address $address) {
-                return $address->toString();
-            }, $message->getFrom()));
+            $previewData['config']['From'] = implode(', ', array_map(static fn (Address $address) => $address->toString(), $message->getFrom()));
 
-            $previewData['config']['To'] = implode(', ', array_map(static function (Address $address) {
-                return $address->toString();
-            }, $message->getTo()));
+            $previewData['config']['To'] = implode(', ', array_map(static fn (Address $address) => $address->toString(), $message->getTo()));
 
-            $previewData['config']['Reply to'] = implode(', ', array_map(static function (Address $address) {
-                return $address->toString();
-            }, $message->getReplyTo()));
+            $previewData['config']['Reply to'] = implode(', ', array_map(static fn (Address $address) => $address->toString(), $message->getReplyTo()));
 
             $previewData['config']['Attach files'] = $this->attachUploadedFiles ? 'yes' : 'no';
 
@@ -266,9 +260,7 @@ class MailDataDispatcher extends DataDispatcher implements TemplateEngineAwareIn
      */
     public function getUploadFields(array $data): array
     {
-        return array_filter($data, static function ($value) {
-            return $value instanceof FileValueInterface;
-        });
+        return array_filter($data, static fn ($value) => $value instanceof FileValueInterface);
     }
 
     /**
@@ -278,9 +270,7 @@ class MailDataDispatcher extends DataDispatcher implements TemplateEngineAwareIn
      */
     public function getAllButUploadFields(array $data): array
     {
-        return array_filter($data, static function ($value) {
-            return !$value instanceof FileValueInterface;
-        });
+        return array_filter($data, static fn ($value) => !$value instanceof FileValueInterface);
     }
 
     /**
