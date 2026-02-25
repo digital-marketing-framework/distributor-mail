@@ -95,7 +95,7 @@ class MailDataDispatcher extends DataDispatcher implements TemplateEngineAwareIn
 
             $message->subject($subject);
         } catch (RfcComplianceException $e) {
-            throw new DigitalMarketingFrameworkException($e->getMessage());
+            throw new DigitalMarketingFrameworkException($e->getMessage(), $e->getCode(), $e);
         }
     }
 
@@ -129,7 +129,7 @@ class MailDataDispatcher extends DataDispatcher implements TemplateEngineAwareIn
 
             $this->mailManager->sendMessage($message);
         } catch (Exception $e) {
-            throw new DigitalMarketingFrameworkException($e->getMessage());
+            throw new DigitalMarketingFrameworkException($e->getMessage(), $e->getCode(), $e);
         }
     }
 
@@ -155,7 +155,7 @@ class MailDataDispatcher extends DataDispatcher implements TemplateEngineAwareIn
 
             $previewData['htmlText'] = $message->getHtmlBody();
         } catch (Exception $e) {
-            throw new DigitalMarketingFrameworkException($e->getMessage());
+            throw new DigitalMarketingFrameworkException($e->getMessage(), $e->getCode(), $e);
         }
 
         return $previewData;
